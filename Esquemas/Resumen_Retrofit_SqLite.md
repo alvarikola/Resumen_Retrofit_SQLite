@@ -1,5 +1,5 @@
 # Retrofit
-![retrofit](image-2.png)
+![retrofit](retrofit.png)
 ## Cómo agregar dependencias de Retrofit
 ### Android Gradle te permite agregar bibliotecas externas a tu proyecto. Además de la dependencia de la biblioteca, también debes incluir el repositorio en el que se aloja.
 

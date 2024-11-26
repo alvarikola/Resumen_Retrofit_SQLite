@@ -13,37 +13,82 @@
 
 ### Las dos bibliotecas funcionan juntas. La primera dependencia es para la biblioteca Retrofit2 y la segunda es para el conversor escalar de Retrofit. Retrofit2 es la versión actualizada de la biblioteca de Retrofit. Este conversor escalar permite que Retrofit muestre el resultado JSON como String. JSON es un formato para almacenar y transportar datos entre el cliente y el servidor.
 
-## Cómo usar retrofit
+## Crear el servicio de Retrofit
+### ApiService.kt
+Define una interfaz donde describirás las peticiones HTTP.
 
-### Retrofit convierte tu HHTP API en una interfaz de java
-
-    interface ApiServiceJsonPlaceholder {
-
-        @GET("/albums") 
-        suspend fun getAlbums(): Response<List<AlbumsDataResponse>> 
+    import retrofit2.http.GET
+    import retrofit2.http.Path
+    import retrofit2.Call
     
+    interface ApiService {
+        @GET("posts")
+        suspend fun getPosts(): List<Post>
+        
+        @GET("posts/{id}")
+        suspend fun getPostById(@Path("id") id: Int): Post
     }
 
-    //  la función getAlbums() realizará una solicitud HTTP de tipo GET a la URL /albums.
+## Crear el modelo de datos
+### Post.kt
+Crea una clase de datos que represente el objeto que recibirás de la API.
 
-    // La función getAlbums devuelve un objeto de tipo Response, que es una envoltura proporcionada por Retrofit para manejar tanto el contenido de la respuesta como los posibles errores (código de estado, excepciones, etc.). El cuerpo de la respuesta es de tipo List<AlbumsDataResponse>, lo que indica que esperamos que el servidor nos devuelva una lista de objetos.
-
-    // Response es un tipo genérico que tiene dos partes importantes:
-
-        isSuccessful: Si la solicitud fue exitosa (código HTTP 200-299).
-
-        body(): Si la respuesta fue exitosa, este método devuelve el cuerpo de la respuesta (en este caso, una lista de objetos de tipo AlbumsDataResponse).
-<br>
-
-    data class AlbumsDataResponse(
-        @SerializedName("userId") val userID: String,
-        @SerializedName("id") val id: String,
-        @SerializedName("title") val title: String,
+    data class Post(
+        val userId: Int,
+        val id: Int,
+        val title: String,
+        val body: String
     )
 
-    // Este es un data class de Kotlin que representa los datos de cada álbum que se obtiene de la respuesta de la API.
+## Configurar Retrofit
+### RetrofitInstance.kt
+Crea un objeto para configurar Retrofit y crear la instancia del servicio.
 
-    // @SerializedName: Esta anotación proviene de la librería Gson y se usa para mapear el nombre de un campo en el JSON que se recibe desde la API a un nombre de propiedad en el data class
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
+    object RetrofitInstance {
+        private const val BASE_URL = "https://jsonplaceholder.typicode.com/"
+        
+        val api: ApiService by lazy {
+            Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(ApiService::class.java)
+        }
+    }
+
+## Por lo general se hace un viewModel para manejar la llamada a Retrofit y proporcionar los datos a la interfaz de usuario.
+
+    import androidx.lifecycle.ViewModel
+    import androidx.lifecycle.viewModelScope
+    import kotlinx.coroutines.launch
+    import kotlinx.coroutines.flow.MutableStateFlow
+    import kotlinx.coroutines.flow.StateFlow
+    
+    class PostViewModel : ViewModel() {
+        private val _posts = MutableStateFlow<List<Post>>(emptyList())
+        val posts: StateFlow<List<Post>> get() = _posts
+        
+        init {
+            fetchPosts()
+        }
+    
+        private fun fetchPosts() {
+            viewModelScope.launch {
+                try {
+                    val fetchedPosts = RetrofitInstance.api.getPosts()
+                    _posts.value = fetchedPosts
+                } catch (e: Exception) {
+                    // Manejar el error
+                    _posts.value = emptyList()
+                }
+            }
+        }
+    }
+
+<br>
 
 # SQLite
 ## Las APIs que necesitarás para utilizar una base de datos en Android están disponibles en el paquete **android.database.sqlite.**

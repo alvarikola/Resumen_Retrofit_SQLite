@@ -44,8 +44,8 @@ Crea una clase de datos que represente el objeto que recibirás de la API.
 ### RetrofitInstance.kt
 Crea un objeto para configurar Retrofit y crear la instancia del servicio.
 
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+    import retrofit2.Retrofit
+    import retrofit2.converter.gson.GsonConverterFactory
 
     object RetrofitInstance {
         private const val BASE_URL = "https://jsonplaceholder.typicode.com/"
